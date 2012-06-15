@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.IO;
-using Microsoft.XmlDiffPatch;
+using System.Xml.Linq;
 
 namespace CheckinVerifier
 {
@@ -35,22 +35,39 @@ namespace CheckinVerifier
             //
             // Step 1: Verify ServiceDefinition.csdef between Source/AzureDeploy and Sample/SampleAzureDeploy.
             //
-            var baseVersion = Path.Combine( BaseDeployFolder, ServiceDefinitionFilename );
-            var sampleVersion = Path.Combine( SampleDeployFolder, ServiceDefinitionFilename );
+            var baseVersion =  XElement.Load( Path.Combine( BaseDeployFolder, ServiceDefinitionFilename ));
+            var sampleVersion = XElement.Load( Path.Combine( SampleDeployFolder, ServiceDefinitionFilename ) );
+            
+            PrintResult( "ServiceDefinition", VerifyServiceDefinition( baseVersion, sampleVersion ) );
 
-            XmlWriter output = XmlWriter.Create( "diff.xml", new XmlWriterSettings { Indent = true } );
-            DiffXmlFiles( baseVersion, sampleVersion, output );
+            Console.ReadKey( );
         }
 
-        /// <summary>
-        /// Diffs the two files and writes the result to differencesWriter.
-        /// </summary>
-        public static void DiffXmlFiles( string originalFile, string finalFile, XmlWriter differencesWriter )
+        static void PrintResult( string test, bool result )
         {
-            XmlDiff xmldiff = new XmlDiff( XmlDiffOptions.IgnoreChildOrder | XmlDiffOptions.IgnoreNamespaces | XmlDiffOptions.IgnorePrefixes );
-            bool bIdentical = xmldiff.Compare( originalFile, finalFile, true, differencesWriter );
-            differencesWriter.Close( );
+            Console.Write( String.Format( "Verifying {0}...........", test ) );
+
+            // Print the result.
+            if ( result )
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write( "\t\t[ OK ]" );
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write( "\t\t[ FAIL ]" );
+            }
+
+            Console.ForegroundColor = ConsoleColor.Gray;
         }
 
+        static bool VerifyServiceDefinition( XElement baseDoc, XElement sampleDoc )
+        {
+            var baseWorkerRole = baseDoc.FirstNode;
+            var sampleWorkerRole = sampleDoc.FirstNode;
+
+            return ( baseWorkerRole.ToString( ).Equals( sampleWorkerRole .ToString()) );
+        }
     }
 }

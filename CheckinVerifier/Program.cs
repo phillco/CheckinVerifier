@@ -23,6 +23,8 @@ namespace CheckinVerifier
         static string SampleDeployFolder = Path.Combine( SampleFolder, @"SampleAzureDeploy\" );
 
         const string ServiceDefinitionFilename = "ServiceDefinition.csdef";
+        const string ServiceConfigurationFilename = "ServiceConfiguration.Local.cscfg";
+
 
         //===========================================
         //
@@ -33,19 +35,30 @@ namespace CheckinVerifier
         static void Main( string[] args )
         {
             //
-            // Step 1: Verify ServiceDefinition.csdef between Source/AzureDeploy and Sample/SampleAzureDeploy.
+            // Step 1: Verify ServiceDefinition between Source/AzureDeploy and Sample/SampleAzureDeploy.
             //
-            var baseVersion =  XElement.Load( Path.Combine( BaseDeployFolder, ServiceDefinitionFilename ));
-            var sampleVersion = XElement.Load( Path.Combine( SampleDeployFolder, ServiceDefinitionFilename ) );
-            
-            PrintResult( "ServiceDefinition", VerifyServiceDefinition( baseVersion, sampleVersion ) );
+            {
+                var baseServiceDefinition = XElement.Load( Path.Combine( BaseDeployFolder, ServiceDefinitionFilename ) );
+                var sampleServiceDefinition = XElement.Load( Path.Combine( SampleDeployFolder, ServiceDefinitionFilename ) );
+                PrintResult( ServiceDefinitionFilename, VerifyServiceDefinition( baseServiceDefinition, sampleServiceDefinition ) );
+            }
+
+            //
+            // Step 2: Verify the local ServiceConfiguration between Source/AzureDeploy and Sample/SampleAzureDeploy.
+            //
+            {
+                var baseDoc = XElement.Load( Path.Combine( BaseDeployFolder, ServiceConfigurationFilename ) );
+                var sampleDoc = XElement.Load( Path.Combine( SampleDeployFolder, ServiceConfigurationFilename ) );
+                PrintResult( ServiceConfigurationFilename, VerifyServiceDefinition( baseDoc, sampleDoc ) );
+            }
+
 
             Console.ReadKey( );
         }
 
         static void PrintResult( string test, bool result )
         {
-            Console.Write( String.Format( "Verifying {0}...........", test ) );
+            Console.Write( String.Format( "Verifying {0, -50}", test + ".." ) );
 
             // Print the result.
             if ( result )
@@ -59,6 +72,7 @@ namespace CheckinVerifier
                 Console.Write( "\t\t[ FAIL ]" );
             }
 
+            Console.WriteLine( );
             Console.ForegroundColor = ConsoleColor.Gray;
         }
 
@@ -67,7 +81,7 @@ namespace CheckinVerifier
             var baseWorkerRole = baseDoc.FirstNode;
             var sampleWorkerRole = sampleDoc.FirstNode;
 
-            return ( baseWorkerRole.ToString( ).Equals( sampleWorkerRole .ToString()) );
+            return ( baseWorkerRole.ToString( ).Equals( sampleWorkerRole.ToString( ) ) );
         }
     }
 }

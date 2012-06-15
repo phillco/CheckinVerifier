@@ -25,7 +25,6 @@ namespace CheckinVerifier
         const string ServiceDefinitionFilename = "ServiceDefinition.csdef";
         const string ServiceConfigurationFilename = "ServiceConfiguration.Local.cscfg";
 
-
         //===========================================
         //
         // METHODS
@@ -38,18 +37,18 @@ namespace CheckinVerifier
             // Step 1: Verify ServiceDefinition between Source/AzureDeploy and Sample/SampleAzureDeploy.
             //
             {
-                var baseServiceDefinition = XElement.Load( Path.Combine( BaseDeployFolder, ServiceDefinitionFilename ) );
-                var sampleServiceDefinition = XElement.Load( Path.Combine( SampleDeployFolder, ServiceDefinitionFilename ) );
-                PrintResult( ServiceDefinitionFilename, VerifyServiceDefinition( baseServiceDefinition, sampleServiceDefinition ) );
+                var baseServiceDefinition = Path.Combine( BaseDeployFolder, ServiceDefinitionFilename );
+                var sampleServiceDefinition = Path.Combine( SampleDeployFolder, ServiceDefinitionFilename );
+                PrintResult( ServiceDefinitionFilename, VerifyFirstElement( baseServiceDefinition, sampleServiceDefinition ) );
             }
 
             //
             // Step 2: Verify the local ServiceConfiguration between Source/AzureDeploy and Sample/SampleAzureDeploy.
             //
             {
-                var baseDoc = XElement.Load( Path.Combine( BaseDeployFolder, ServiceConfigurationFilename ) );
-                var sampleDoc = XElement.Load( Path.Combine( SampleDeployFolder, ServiceConfigurationFilename ) );
-                PrintResult( ServiceConfigurationFilename, VerifyServiceDefinition( baseDoc, sampleDoc ) );
+                var baseDoc = Path.Combine( BaseDeployFolder, ServiceConfigurationFilename );
+                var sampleDoc = Path.Combine( SampleDeployFolder, ServiceConfigurationFilename );
+                PrintResult( ServiceConfigurationFilename, VerifyFirstElement( baseDoc, sampleDoc ) );
             }
 
 
@@ -76,8 +75,11 @@ namespace CheckinVerifier
             Console.ForegroundColor = ConsoleColor.Gray;
         }
 
-        static bool VerifyServiceDefinition( XElement baseDoc, XElement sampleDoc )
+        static bool VerifyFirstElement( string basePath, string samplePath )
         {
+            XElement baseDoc = XElement.Load( basePath );
+            XElement sampleDoc = XElement.Load( samplePath );
+
             var baseWorkerRole = baseDoc.FirstNode;
             var sampleWorkerRole = sampleDoc.FirstNode;
 

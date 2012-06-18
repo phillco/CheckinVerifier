@@ -28,6 +28,9 @@ namespace CheckinVerifier
             public const string SetupFolder = "Setup";
         }
 
+        static int numTestsPassed = 0;
+        static int numTestsFailed = 0;
+
         //===========================================
         //
         // METHODS
@@ -36,6 +39,14 @@ namespace CheckinVerifier
 
         static void Main( string[] args )
         {
+            // Ensure running in the right directory.
+            if ( !Directory.Exists( BaseProject.DeployFolder ) || !Directory.Exists( SampleProject.DeployFolder ) )
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine( "Error: This tool must be run in the top level of the mongo-azure directory." );
+                return;
+            }
+
             //
             // Step 1: Verify ServiceDefinition between Source/AzureDeploy and Sample/SampleAzureDeploy.
             //
@@ -65,7 +76,13 @@ namespace CheckinVerifier
                 PrintResult( "ServiceConfiguration.Cloud.cscfg", VerifyElementMatches( basePath, samplePath, "ReplicaSetRole") );
             }
 
-            Console.ReadKey( );
+            // Print results.
+            Console.WriteLine( "\nResults:" );
+            Console.WriteLine( String.Format( "\t{0, 2} passed", numTestsPassed ) );
+            Console.WriteLine( String.Format( "\t{0, 2} failed\n", numTestsFailed ) );
+
+            if ( numTestsFailed > 0 )
+                Environment.Exit( -1 );
         }
 
         /// <summary>
@@ -104,11 +121,13 @@ namespace CheckinVerifier
             {
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.Write( "[ OK ]" );
+                numTestsPassed++;
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Write( "[ FAIL ]" );
+                numTestsFailed++;
             }
 
             Console.BackgroundColor = ConsoleColor.Black;

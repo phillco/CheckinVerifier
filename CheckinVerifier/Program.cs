@@ -18,15 +18,15 @@ namespace CheckinVerifier
 
         static class BaseProject
         {
-            public const string DeployFolder = "Source\\AzureDeploy";
-            public const string SetupFolder = "Source\\Setup";
+            public const string DeployFolder = "src\\MongoDB.WindowsAzure.Deploy";
+            public const string SetupFolder = "Setup";
         }
 
         static class SampleProject
         {
-            public const string DeployFolder = "Samples\\SampleMvcApp\\SampleAzureDeploy";
-            public const string SetupFolder =  "Samples\\SampleMvcApp\\Setup"; 
-        }    
+            public const string DeployFolder = "src\\SampleApplications\\MvcMovieSample\\MongoDB.WindowsAzure.Sample.Deploy";
+            public const string SetupFolder = "Setup";
+        }
 
         //===========================================
         //
@@ -43,7 +43,7 @@ namespace CheckinVerifier
                 var file = "ServiceDefinition.csdef";
                 var baseServiceDefinition = Path.Combine( BaseProject.DeployFolder, file );
                 var sampleServiceDefinition = Path.Combine( SampleProject.DeployFolder, file );
-                PrintResult( file, VerifyFirstElement( baseServiceDefinition, sampleServiceDefinition ) );
+                PrintResult( file, VerifyElementMatches( baseServiceDefinition, sampleServiceDefinition, "ReplicaSetRole" ) );
             }
 
             //
@@ -53,17 +53,16 @@ namespace CheckinVerifier
                 var file = "ServiceConfiguration.Local.cscfg";
                 var baseDoc = Path.Combine( BaseProject.DeployFolder, file );
                 var sampleDoc = Path.Combine( SampleProject.DeployFolder, file );
-                PrintResult( file, VerifyFirstElement( baseDoc, sampleDoc ) );
+                PrintResult( file, VerifyElementMatches( baseDoc, sampleDoc, "ReplicaSetRole" ) );
             }
 
             //
             // Step 3: Verify the cloud ServiceConfiguration between the two setup dirs.
             //
             {
-                var file = "ServiceConfiguration.Cloud.cscfg.ref";
-                var basePath = Path.Combine( BaseProject.SetupFolder, file );
-                var samplePath = Path.Combine( SampleProject.SetupFolder, file );
-                PrintResult( file, VerifyFirstElement( basePath, samplePath ) );
+                var basePath = Path.Combine( BaseProject.SetupFolder, "ServiceConfiguration.Cloud.cscfg.core" );
+                var samplePath = Path.Combine( SampleProject.SetupFolder, "ServiceConfiguration.Cloud.cscfg.sample" );
+                PrintResult( "ServiceConfiguration.Cloud.cscfg", VerifyElementMatches( basePath, samplePath, "ReplicaSetRole") );
             }
 
             Console.ReadKey( );
@@ -75,7 +74,7 @@ namespace CheckinVerifier
 
             // Print the result.            
             if ( result )
-            {                
+            {
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.Write( "[ OK ]" );
             }
@@ -84,21 +83,34 @@ namespace CheckinVerifier
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Write( "[ FAIL ]" );
             }
-            
+
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine( );
         }
 
-        static bool VerifyFirstElement( string basePath, string samplePath )
+        /// <summary>
+        /// Verifies that both the document in basePath and samplePath have an element with a "name" attribute of elementName, and that these two elements are identical.
+        /// </summary>
+        static bool VerifyElementMatches( string basePath, string samplePath, string elementName )
         {
             XElement baseDoc = XElement.Load( basePath );
             XElement sampleDoc = XElement.Load( samplePath );
 
-            var baseWorkerRole = baseDoc.FirstNode;
-            var sampleWorkerRole = sampleDoc.FirstNode;
+            try
+            {
+                var baseElement = baseDoc.Elements( ).First( element => element.Attribute( "name" ).Value == elementName );
+                var sampleElement = sampleDoc.Elements( ).First( element => element.Attribute( "name" ).Value == elementName );
 
-            return ( baseWorkerRole.ToString( ).Equals( sampleWorkerRole.ToString( ) ) );
+                return ( baseElement.ToString( ).Equals( sampleElement.ToString( ) ) );
+            }
+            catch ( InvalidOperationException )
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine( "\n\nERROR: Element \"" + elementName + "\" does not even exist for this test:" );
+                Console.ForegroundColor = ConsoleColor.Gray;
+                return false;
+            }            
         }
     }
 }

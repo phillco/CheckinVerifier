@@ -68,27 +68,6 @@ namespace CheckinVerifier
             Console.ReadKey( );
         }
 
-        static void PrintResult( string test, bool result )
-        {
-            Console.Write( String.Format( "Verifying {0, -60}", test + ".." ) );
-
-            // Print the result.            
-            if ( result )
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write( "[ OK ]" );
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write( "[ FAIL ]" );
-            }
-
-            Console.BackgroundColor = ConsoleColor.Black;
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine( );
-        }
-
         /// <summary>
         /// Verifies that both the document in basePath and samplePath have an element with a "name" attribute of elementName, and that these two elements are identical.
         /// </summary>
@@ -111,6 +90,30 @@ namespace CheckinVerifier
                 Console.ForegroundColor = ConsoleColor.Gray;
                 return false;
             }            
+        }
+
+        /// <summary>
+        /// Prints the result of the given test nicely to the console.
+        /// </summary>
+        static void PrintResult( string test, bool result )
+        {
+            Console.Write( String.Format( "Verifying {0, -60}", test + ".." ) );
+
+            // Print the result.            
+            if ( result )
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write( "[ OK ]" );
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write( "[ FAIL ]" );
+            }
+
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine( );
         }
     }
 }
